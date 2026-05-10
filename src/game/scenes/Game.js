@@ -76,6 +76,9 @@ export class Game extends Scene
   }
 
   statBar () {
+    const parentBar = this.add.graphics();
+    parentBar.fillStyle(0x333333, 1);
+    parentBar.fillRect(0, 500, this.game.config.width, this.game.config.height);
     this.stats = {};
     const labels = ["hunger", "chaos", "dignity", "sanity"];
     labels.forEach((label, i) => {
@@ -198,17 +201,19 @@ export class Game extends Scene
       this.avatar.flicked = true
     })
     this.avatar.on('drag', (e, dragX, dragY) => {
-      console.log(this.avatar.flicked)
+      this.avatar
       this.avatar.x = dragX
       this.avatar.y = dragY
       this.setValue("dignity", this.stats["dignity"].value - .5)
-      this.updateTooltip("Dragging Nicky costs Dignity!\nLet him fly!")
+       this.setValue("hunger", this.stats["hunger"].value - .5)
+      this.updateTooltip("Dragging Nicky costs Dignity, makes him\nHungry, and stops him from drinking\n Caffeine! Let him fly!")
     })
     this.input.on('dragend',(pointer, gameObject) => {
       const multiplier = 1.5
       this.avatar.setVelocity(pointer.velocity.x * multiplier, pointer.velocity.y * multiplier).setDrag(.9).setDamping(true)
       this.avatar.setBounce(.7);
       this.avatar.flying = true
+      this.updateTooltip("Whee!!")
     });
   }
 
