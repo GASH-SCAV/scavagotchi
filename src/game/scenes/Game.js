@@ -48,6 +48,12 @@ export class Game extends Scene
   }
 
   setValue(statLabel, percentage) {
+    if (percentage > 100){
+      percentage = 100
+    }
+    if (percentage < 1){
+      percentage = 0
+    }
     this.stats[statLabel].value = percentage
     const bar = this.stats[statLabel].bar
     if (percentage > 60){
@@ -75,17 +81,32 @@ export class Game extends Scene
 
   spawnSanityItem = () => {
     this.sanityItems ||= []
-    this.sanityItems
+    const { width, height } = this.game.config;
+    if (this.sanityItems.length > 3){
+      return
+    }
+    const image = PhaserMath.RND.pick(["sanity1", "sanity2"]) 
+    let x = PhaserMath.Between(50, width - 50);
+    let y = PhaserMath.Between(50, 550)
+    // don't let it spawn on my face or other items
+    while (this.avatar.getBounds().contains(x, y) || this.sanityItems.find(item => item.getBounds().contains(x, y))){
+      x = PhaserMath.Between(50, width - 50);
+      y = PhaserMath.Between(50, 550)
+    }    
+    let newItem = this.physics.add.image(x, y, image);
+    newItem.displayHeight = 50;
+    newItem.scaleX = newItem.scaleY;
+    this.sanityItems.push(newItem)
   }
 
   handleTimers = () => {
-    const lokoTimer = this.time.addEvent({ 
+    const itemTimer = this.time.addEvent({ 
       delay: 1000, 
       callback: () => {
-        console.log("cheese")
-        lokoTimer.reset
-        lokoTimer.delay = Math.floor(Math.random() * 9000) + 3000
-        this.time.addEvent(lokoTimer);
+        this.spawnSanityItem();
+        itemTimer.reset
+        itemTimer.delay = Math.floor(Math.random() * 9000) + 3000
+        this.time.addEvent(itemTimer);
     }});
 
     const statTimer = this.time.addEvent({
@@ -131,7 +152,14 @@ export class Game extends Scene
     this.initialRender();
     this.handleTimers();
   }
-
+  
+  update() {
+    https://developer.mozilla.org/en-US/docs/Games/Tutorials/2D_breakout_game_Phaser/Collision_detection
+    this.physics.collide(this.avatar, this.sanityItems, (avatar, sanityItem) => {
+      sanityItem.destroy()
+      this.setValue("sanity", this.stats["sanity"].value + 10)
+    });
+  }
 
   degreeToDirection = (degrees) => {
     // Eight segments 
