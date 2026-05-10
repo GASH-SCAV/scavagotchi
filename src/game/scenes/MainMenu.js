@@ -113,7 +113,7 @@ export class MainMenu extends Scene
 
                     playerText.text = name;
                 }
-                else if (name.length < 16)
+                else if (name.length < 8)
                 {
                     //  Add
                     name = name.concat(chars[cursor.y][cursor.x]);
@@ -165,7 +165,7 @@ export class MainMenu extends Scene
                 this.updateGame({name})
                 this.scene.start('Game');
             }
-            else if (name.length < 16)
+            else if (name.length < 8)
             {
                 //  Add
                 name = name.concat(char);

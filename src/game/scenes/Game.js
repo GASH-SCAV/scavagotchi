@@ -233,7 +233,8 @@ export class Game extends Scene
     this.avatar.setTexture(`neutral${this.degreeToDirection(degrees)}`);
   }
 
-  moveFace = (pointer) => {
+  moveFace = (e) => {
+    console.log(e)
     // https://github.com/phaserjs/examples/blob/master/public/src/physics/arcade/move%20to%20pointer.js
     this.physics.moveToObject(this.avatar, pointer, this.stats.dignity.value + this.stats.sanity.value);
     this.setValue("hunger", this.stats.hunger.value - 0.01)
