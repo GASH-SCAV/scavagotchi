@@ -54,6 +54,8 @@ export class Game extends Scene
     }
     if (percentage < 1){
       percentage = 0
+      this.game.registry.statLabel = statLabel
+      this.scene.start('GameOver');
     }
     this.stats[statLabel].value = percentage
     const bar = this.stats[statLabel].bar
@@ -70,7 +72,7 @@ export class Game extends Scene
   }
 
   updateTooltip = (text) => {
-    this.tooltip ||= this.add.bitmapText(20, 550, 'arcade', "").setTint(0xff0000).setFontSize(12);
+    this.tooltip ||= this.add.bitmapText(10, this.playableY + 5, 'arcade', "").setTint(0xff0000).setFontSize(12);
     this.tooltip.setText(text)
 
   }
@@ -78,12 +80,12 @@ export class Game extends Scene
   statBar () {
     const parentBar = this.add.graphics();
     parentBar.fillStyle(0x333333, 1);
-    parentBar.fillRect(0, 500, this.game.config.width, this.game.config.height);
+    parentBar.fillRect(0, this.playableY, this.game.config.width, this.game.config.height);
     this.stats = {};
-    const labels = ["hunger", "chaos", "dignity", "sanity"];
+    const labels = ["dignity", "sanity", "chaos"];
     labels.forEach((label, i) => {
       this.stats[label] = {
-        bar: this.makeBar(label, 600 + i * 50, 0x00FF00),
+        bar: this.makeBar(label, this.playableY + 50  + i * 50, 0x00FF00),
         value: 100 // hard code to 100 for now
       } 
     })
@@ -92,12 +94,12 @@ export class Game extends Scene
   generateCollisionFreePoints(){
     const { width } = this.game.config;
     let x = PhaserMath.Between(50, width - 50);
-    let y = PhaserMath.Between(50, 550)
+    let y = PhaserMath.Between(50, this.playableY)
     // don't let it spawn on my face or other items
     const items = [this.avatar, ...this.sanityItems]
     while (items.find(item => item.getBounds().contains(x, y))){
       x = PhaserMath.Between(50, width - 50);
-      y = PhaserMath.Between(50, 500)
+      y = PhaserMath.Between(50, this.playableY)
     }
     return [x, y]
   }
@@ -205,8 +207,8 @@ export class Game extends Scene
       this.avatar.x = dragX
       this.avatar.y = dragY
       this.setValue("dignity", this.stats["dignity"].value - .5)
-       this.setValue("hunger", this.stats["hunger"].value - .5)
-      this.updateTooltip("Dragging Nicky costs Dignity, makes him\nHungry, and stops him from drinking\n Caffeine! Let him fly!")
+      // this.setValue("hunger", this.stats["hunger"].value - .5)
+      this.updateTooltip("Dragging Nicky costs Dignity\nand stops him from drinking\nCaffeine! Let him fly!")
     })
     this.input.on('dragend',(pointer, gameObject) => {
       const multiplier = 1.5
@@ -219,10 +221,11 @@ export class Game extends Scene
 
   create ()
   {
+    this.playableY = this.game.config.height - 200
     this.setHandlers();
     this.initialRender();
     this.handleTimers();
-    this.physics.world.setBounds(0, 0, this.game.config.width, 500)
+    this.physics.world.setBounds(0, 0, this.game.config.width, this.playableY)
     this.avatar.setCollideWorldBounds(true);  
     this.updateTooltip("Nicky loses sanity when he\'s \nobserved. Feed him caffeine to \nmake him feel better!")
   }
@@ -267,6 +270,6 @@ export class Game extends Scene
   moveFace = (e) => {
     // https://github.com/phaserjs/examples/blob/master/public/src/physics/arcade/move%20to%20pointer.js
     this.physics.moveToObject(this.avatar, e, this.stats.dignity.value + this.stats.sanity.value);
-    this.setValue("hunger", this.stats.hunger.value - 0.01)
+    // this.setValue("hunger", this.stats.hunger.value - 0.01)
   }
 }
