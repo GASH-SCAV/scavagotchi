@@ -5,6 +5,7 @@ import { MainMenu } from './scenes/MainMenu';
 import { Preloader } from './scenes/Preloader';
 import { AUTO, Game, Scale } from 'phaser';
 
+
 //  Find out more information about the Game Config at:
 //  https://docs.phaser.io/api-documentation/typedef/types-core#gameconfig
 const config = {
@@ -17,6 +18,10 @@ const config = {
     mode: Scale.FIT,
     autoCenter: Scale.CENTER_BOTH
   },
+  physics: {
+    default: 'arcade',
+    arcade: {},
+  },
   scene: [
     Boot,
     Preloader,
@@ -27,8 +32,10 @@ const config = {
 };
 
 
-const StartGame = (parent) => {
 
+
+
+const StartGame = (parent) => {
   return new Game({ ...config, parent });
 
 }
