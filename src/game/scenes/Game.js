@@ -190,7 +190,7 @@ export class Game extends Scene
 
   initialRender ()
   {
-    this.renderNickyName();
+    // this.renderNickyName();
     this.statBar();
     this.cameras.main.setBackgroundColor(0x000000);
     const { width, height } = this.game.config;
