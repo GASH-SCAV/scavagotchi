@@ -18,20 +18,20 @@ export class Game extends Scene
     this.load.image('garbage', 'assets/objects/crushedcan.png');
   }
 
-  updateGame = (obj) => {
-    const oldState = {name: this.game.registry.name, gameEvents: this.game.registry.gameEvents}
-    const newState = {...oldState, ...obj}
-    if (newState.name) {
-      this.game.registry.name = newState.name
-    }
-    if (newState.gameEvents) {
-      this.game.registry.gameEvents = newState.gameEvents
-    }
-    localStorage.setItem('gameSavedState', JSON.stringify(newState))
-    }
-  renderNickyName () {
-    this.add.bitmapText(100, 20, 'arcade', this.registry.name).setTint(0xff00ff);
-  }
+  // updateGame = (obj) => {
+  //   const oldState = {name: this.game.registry.name, gameEvents: this.game.registry.gameEvents}
+  //   const newState = {...oldState, ...obj}
+  //   if (newState.name) {
+  //     this.game.registry.name = newState.name
+  //   }
+  //   if (newState.gameEvents) {
+  //     this.game.registry.gameEvents = newState.gameEvents
+  //   }
+  //   localStorage.setItem('gameSavedState', JSON.stringify(newState))
+  //   }
+  // renderNickyName () {
+  //   this.add.bitmapText(100, 20, 'arcade', this.registry.name).setTint(0xff00ff);
+  // }
 
   // https://phasergames.com/how-to-make-a-health-bar-in-phaser-3/
   makeBar(labelText, y, color) {

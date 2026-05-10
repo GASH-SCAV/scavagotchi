@@ -50,7 +50,7 @@ export class Preloader extends Scene
     if (this.game.registry.name){
       this.scene.start('Game');
     } else {
-      this.scene.start('MainMenu');
+      this.scene.start('Game');
     }
   }
 }
