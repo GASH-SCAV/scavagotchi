@@ -223,5 +223,6 @@ export class Game extends Scene
   moveFace = (pointer) => {
     // https://github.com/phaserjs/examples/blob/master/public/src/physics/arcade/move%20to%20pointer.js
     this.physics.moveToObject(this.avatar, pointer, this.stats.dignity.value + this.stats.sanity.value);
+    this.setValue("hunger", this.stats.hunger.value - 0.01)
   }
 }
