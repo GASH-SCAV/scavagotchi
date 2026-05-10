@@ -69,6 +69,12 @@ export class Game extends Scene
     bar.scaleX = percentage/100;
   }
 
+  updateTooltip = (text) => {
+    this.tooltip ||= this.add.bitmapText(20, 550, 'arcade', "").setTint(0xff0000).setFontSize(12);
+    this.tooltip.setText(text)
+
+  }
+
   statBar () {
     this.stats = {};
     const labels = ["hunger", "chaos", "dignity", "sanity"];
@@ -88,7 +94,7 @@ export class Game extends Scene
     const items = [this.avatar, ...this.sanityItems]
     while (items.find(item => item.getBounds().contains(x, y))){
       x = PhaserMath.Between(50, width - 50);
-      y = PhaserMath.Between(50, 550)
+      y = PhaserMath.Between(50, 500)
     }
     return [x, y]
   }
@@ -118,6 +124,7 @@ export class Game extends Scene
     item.on('pointerdown', () => {
       Utils.Array.Remove(this.garbage, item)
       item.destroy()
+      this.updateTooltip("")
     })
     this.garbage.push(item)
   }
@@ -125,6 +132,7 @@ export class Game extends Scene
   drainStats = (statTimer) => {
     const {sanity, dignity} = this.stats
     // handle triggers before garbage initialization
+    const oldValues = sanity.value + dignity.value
     const garbageLength = this.garbage?.length || 0
     if (garbageLength == 0){
       this.setValue("dignity", dignity.value + 2)
@@ -133,6 +141,9 @@ export class Game extends Scene
     }
     this.setValue("sanity", sanity.value - 2);
     statTimer.reset;
+    if (oldValues >= 150 && (this.stats.sanity.value + this.stats.dignity.value < 150)){
+      this.updateTooltip("Nicky gets slower as\nhis stats decline!")
+    }
     this.time.addEvent(statTimer);
   }
 
@@ -182,6 +193,7 @@ export class Game extends Scene
     this.setHandlers();
     this.initialRender();
     this.handleTimers();
+    this.updateTooltip("Nicky loses sanity when he\'s \nobserved. Feed him caffeine to \nmake him feel better!")
   }
   
   update() {
@@ -191,6 +203,7 @@ export class Game extends Scene
       sanityItem.destroy()
       this.setValue("sanity", this.stats["sanity"].value + 10)
       this.spawnGarbage()
+      this.updateTooltip('Nicky created trash!\nClick it to clean it \nand save his dignity.')
     });
   }
 
