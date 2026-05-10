@@ -165,6 +165,10 @@ export class Game extends Scene
 
   setHandlers () {
     this.input.on('pointerdown', (e) => {
+      if (this.avatar?.flying){
+        this.avatar.flying = false
+        this.avatar.body.setVelocity(0, 0);
+      }
       this.rotateFace(e);
     });
     this.input.on('pointermove', (e) => {
@@ -174,8 +178,10 @@ export class Game extends Scene
       }
     })
     this.input.on('pointerup', (e) => {
-      this.avatar.setTexture('neutral0');
-      this.avatar.body.setVelocity(0, 0);
+      if (!this.avatar.flying){
+        this.avatar.setTexture('neutral0');
+        this.avatar.body.setVelocity(0, 0);
+      }
     });
   }
 
@@ -186,6 +192,24 @@ export class Game extends Scene
     this.cameras.main.setBackgroundColor(0x000000);
     const { width, height } = this.game.config;
     this.avatar = this.physics.add.image(width / 2, height / 2, 'neutral0').setDisplaySize(100, 100);
+    this.avatar.setInteractive();
+    this.input.setDraggable(this.avatar);
+    this.avatar.on('pointerdown', (e) => {
+      this.avatar.flicked = true
+    })
+    this.avatar.on('drag', (e, dragX, dragY) => {
+      console.log(this.avatar.flicked)
+      this.avatar.x = dragX
+      this.avatar.y = dragY
+      this.setValue("dignity", this.stats["dignity"].value - .5)
+      this.updateTooltip("Dragging Nicky costs Dignity!\nLet him fly!")
+    })
+    this.input.on('dragend',(pointer, gameObject) => {
+      const multiplier = 1.5
+      this.avatar.setVelocity(pointer.velocity.x * multiplier, pointer.velocity.y * multiplier).setDrag(.9).setDamping(true)
+      this.avatar.setBounce(.7);
+      this.avatar.flying = true
+    });
   }
 
   create ()
@@ -193,6 +217,8 @@ export class Game extends Scene
     this.setHandlers();
     this.initialRender();
     this.handleTimers();
+    this.physics.world.setBounds(0, 0, this.game.config.width, 500)
+    this.avatar.setCollideWorldBounds(true);  
     this.updateTooltip("Nicky loses sanity when he\'s \nobserved. Feed him caffeine to \nmake him feel better!")
   }
   
@@ -234,9 +260,8 @@ export class Game extends Scene
   }
 
   moveFace = (e) => {
-    console.log(e)
     // https://github.com/phaserjs/examples/blob/master/public/src/physics/arcade/move%20to%20pointer.js
-    this.physics.moveToObject(this.avatar, pointer, this.stats.dignity.value + this.stats.sanity.value);
+    this.physics.moveToObject(this.avatar, e, this.stats.dignity.value + this.stats.sanity.value);
     this.setValue("hunger", this.stats.hunger.value - 0.01)
   }
 }
