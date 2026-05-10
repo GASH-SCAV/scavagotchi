@@ -1,4 +1,4 @@
-import { Scene, Math as PhaserMath } from 'phaser';
+import { Scene, Utils, Math as PhaserMath } from 'phaser';
 
 export class Game extends Scene
 {
@@ -13,8 +13,9 @@ export class Game extends Scene
     [0, 1, 2, 3, 4, 5, 6, 7, 8].forEach(i => {
       this.load.image(`neutral${i}`, `assets/sprites/neutral_${i}.png`);
     });
-    this.load.image('sanity1', 'assets/objects/fourloko.png')
-    this.load.image('sanity2', 'assets/objects/monster.png')
+    this.load.image('sanity1', 'assets/objects/fourloko.png');
+    this.load.image('sanity2', 'assets/objects/monster.png');
+    this.load.image('garbage', 'assets/objects/crushedcan.png');
   }
 
   updateGame = (obj) => {
@@ -79,45 +80,75 @@ export class Game extends Scene
     })
   }
 
-  spawnSanityItem = () => {
-    this.sanityItems ||= []
-    const { width, height } = this.game.config;
-    if (this.sanityItems.length > 3){
-      return
-    }
-    const image = PhaserMath.RND.pick(["sanity1", "sanity2"]) 
+  generateCollisionFreePoints(){
+    const { width } = this.game.config;
     let x = PhaserMath.Between(50, width - 50);
     let y = PhaserMath.Between(50, 550)
     // don't let it spawn on my face or other items
-    while (this.avatar.getBounds().contains(x, y) || this.sanityItems.find(item => item.getBounds().contains(x, y))){
+    const items = [this.avatar, ...this.sanityItems]
+    while (items.find(item => item.getBounds().contains(x, y))){
       x = PhaserMath.Between(50, width - 50);
       y = PhaserMath.Between(50, 550)
-    }    
-    let newItem = this.physics.add.image(x, y, image);
+    }
+    return [x, y]
+  }
+
+  createItem = (image) => {
+    const [x, y] = this.generateCollisionFreePoints()
+    const newItem = this.physics.add.image(x, y, image);
     newItem.displayHeight = 50;
     newItem.scaleX = newItem.scaleY;
+    return newItem
+  }
+
+  spawnSanityItem = () => {
+    this.sanityItems ||= []
+    if (this.sanityItems.length > 2){
+      return
+    }
+    const image = PhaserMath.RND.pick(["sanity1", "sanity2"]) 
+    const newItem = this.createItem(image)
     this.sanityItems.push(newItem)
+  }
+
+  spawnGarbage = () => {
+    this.garbage ||= []
+    const item = this.createItem("garbage")
+    item.setInteractive();
+    item.on('pointerdown', () => {
+      Utils.Array.Remove(this.garbage, item)
+      item.destroy()
+    })
+    this.garbage.push(item)
+  }
+
+  drainStats = (statTimer) => {
+    const {sanity, dignity} = this.stats
+    // handle triggers before garbage initialization
+    const garbageLength = this.garbage?.length || 0
+    if (garbageLength == 0){
+      this.setValue("dignity", dignity.value + 1)
+    } else {
+      this.setValue("dignity", dignity.value - (this.garbage?.length || 0))
+    }
+    this.setValue("sanity", sanity.value - 2);
+    statTimer.reset;
+    this.time.addEvent(statTimer);
   }
 
   handleTimers = () => {
     const itemTimer = this.time.addEvent({ 
-      delay: 1000, 
+      delay: 2000, 
       callback: () => {
         this.spawnSanityItem();
         itemTimer.reset
-        itemTimer.delay = Math.floor(Math.random() * 9000) + 3000
+        itemTimer.delay = Math.floor(Math.random() * 6000) + 2000
         this.time.addEvent(itemTimer);
     }});
 
     const statTimer = this.time.addEvent({
       delay: 1000,
-      callback: () => {
-        ["sanity"].forEach((label) => {
-          this.setValue(label, this.stats[label].value - 1);
-          statTimer.reset;
-          this.time.addEvent(statTimer);
-        })
-      }
+      callback: () => this.drainStats(statTimer)
     })
   }
 
@@ -156,8 +187,10 @@ export class Game extends Scene
   update() {
     https://developer.mozilla.org/en-US/docs/Games/Tutorials/2D_breakout_game_Phaser/Collision_detection
     this.physics.collide(this.avatar, this.sanityItems, (avatar, sanityItem) => {
+      Utils.Array.Remove(this.sanityItems, sanityItem)
       sanityItem.destroy()
       this.setValue("sanity", this.stats["sanity"].value + 10)
+      this.spawnGarbage()
     });
   }
 
