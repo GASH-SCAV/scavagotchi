@@ -13,6 +13,8 @@ export class Game extends Scene
     [0, 1, 2, 3, 4, 5, 6, 7, 8].forEach(i => {
       this.load.image(`neutral${i}`, `assets/sprites/neutral_${i}.png`);
     });
+    this.load.image('sanity1', 'assets/objects/fourloko.png')
+    this.load.image('sanity2', 'assets/objects/monster.png')
   }
 
   updateGame = (obj) => {
@@ -45,15 +47,91 @@ export class Game extends Scene
     return bar;
   }
 
-  setValue(bar, percentage) {
+  setValue(statLabel, percentage) {
+    this.stats[statLabel].value = percentage
+    const bar = this.stats[statLabel].bar
+    if (percentage > 60){
+      bar.fillStyle(0x00FF00, 1)
+    } else if (percentage > 30){
+      bar.fillStyle(0xFFFF00, 1)
+    }
+     else {
+      bar.fillStyle(0xFF0000, 1)
+    }
+    bar.fillRect(0, 0, this.game.config.width - 10, 20)
     bar.scaleX = percentage/100;
   }
 
   statBar () {
-    ["hunger", "chaos", "dignity", "sanity"].forEach((label, i) => {
-      this.makeBar(label, 600 + i * 50, 0x2ecc71);   
+    this.stats = {};
+    const labels = ["hunger", "chaos", "dignity", "sanity"];
+    labels.forEach((label, i) => {
+      this.stats[label] = {
+        bar: this.makeBar(label, 600 + i * 50, 0x00FF00),
+        value: 100 // hard code to 100 for now
+      } 
     })
   }
+
+  spawnSanityItem = () => {
+    this.sanityItems ||= []
+    this.sanityItems
+  }
+
+  handleTimers = () => {
+    const lokoTimer = this.time.addEvent({ 
+      delay: 1000, 
+      callback: () => {
+        console.log("cheese")
+        lokoTimer.reset
+        lokoTimer.delay = Math.floor(Math.random() * 9000) + 3000
+        this.time.addEvent(lokoTimer);
+    }});
+
+    const statTimer = this.time.addEvent({
+      delay: 1000,
+      callback: () => {
+        ["sanity"].forEach((label) => {
+          this.setValue(label, this.stats[label].value - 1);
+          statTimer.reset;
+          this.time.addEvent(statTimer);
+        })
+      }
+    })
+  }
+
+  setHandlers () {
+    this.input.on('pointerdown', (e) => {
+      this.rotateFace(e);
+    });
+    this.input.on('pointermove', (e) => {
+      this.rotateFace(e);
+      if (e.isDown) {
+        this.moveFace(e);
+      }
+    })
+    this.input.on('pointerup', (e) => {
+      this.avatar.setTexture('neutral0');
+      this.avatar.body.setVelocity(0, 0);
+    });
+  }
+
+  initialRender ()
+  {
+    this.renderNickyName();
+    this.statBar();
+    this.cameras.main.setBackgroundColor(0x000000);
+    const { width, height } = this.game.config;
+    this.avatar = this.physics.add.image(width / 2, height / 2, 'neutral0').setDisplaySize(100, 100);
+  }
+
+  create ()
+  {
+    this.setHandlers();
+    this.initialRender();
+    this.handleTimers();
+  }
+
 
   degreeToDirection = (degrees) => {
     // Eight segments 
@@ -84,33 +162,5 @@ export class Game extends Scene
   moveFace = (pointer) => {
     // https://github.com/phaserjs/examples/blob/master/public/src/physics/arcade/move%20to%20pointer.js
     this.physics.moveToObject(this.avatar, pointer, 100);
-  }
-
-  create ()
-  {
-    this.renderNickyName();
-    this.statBar();
-    this.cameras.main.setBackgroundColor(0x000000);
-
-    const { width, height } = this.game.config;
-
-    
-    this.avatar = this.physics.add.image(width / 2, height / 2, 'neutral0').setDisplaySize(100, 100);
-
-    
-    this.input.on('pointerdown', (e) => {
-      this.rotateFace(e);
-    });
-    this.input.on('pointermove', (e) => {
-      this.rotateFace(e);
-      if (e.isDown) {
-        this.moveFace(e);
-      }
-    });
-
-    this.input.on('pointerup', (e) => {
-      this.avatar.setTexture('neutral0');
-      this.avatar.body.setVelocity(0, 0);
-    });
   }
 }
