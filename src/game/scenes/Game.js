@@ -127,7 +127,7 @@ export class Game extends Scene
     // handle triggers before garbage initialization
     const garbageLength = this.garbage?.length || 0
     if (garbageLength == 0){
-      this.setValue("dignity", dignity.value + 1)
+      this.setValue("dignity", dignity.value + 2)
     } else {
       this.setValue("dignity", dignity.value - (this.garbage?.length || 0))
     }
@@ -222,6 +222,6 @@ export class Game extends Scene
 
   moveFace = (pointer) => {
     // https://github.com/phaserjs/examples/blob/master/public/src/physics/arcade/move%20to%20pointer.js
-    this.physics.moveToObject(this.avatar, pointer, 100);
+    this.physics.moveToObject(this.avatar, pointer, this.stats.dignity.value + this.stats.sanity.value);
   }
 }
